@@ -10,7 +10,7 @@ let rawData = [];
 let leverageFactor = 3;
 
 function loadDefaultCSV() {
-    const defaultCSVUrl = 'HistoricalData_1722553187753.csv';
+    const defaultCSVUrl = 'GSPC.csv';
 
     fetch(defaultCSVUrl)
         .then(response => response.text())
@@ -35,21 +35,26 @@ function handleFileSelect(event) {
         reader.readAsText(file);
     }
 }
-
 function parseCSV(text) {
     const rows = text.split('\n');
-    return rows.slice(1).map(row => {
+    return rows.slice(1).map((row, index) => {
         const cols = row.split(',');
-        return {
+        const parsedRow = {
             date: cols[0],
-            close: parseFloat(cols[1]),
-            open: parseFloat(cols[2]),
-            high: parseFloat(cols[3]),
-            low: parseFloat(cols[4])
+            open: parseFloat(cols[1]),
+            high: parseFloat(cols[2]),
+            low: parseFloat(cols[3]),
+            close: parseFloat(cols[4])
         };
-    }).reverse(); // Reverse the array to have oldest data first
-}
 
+        if (isNaN(parsedRow.close) || isNaN(parsedRow.open) ||
+            isNaN(parsedRow.high) || isNaN(parsedRow.low)) {
+            console.warn(`Invalid data at index ${index}: ${row}`);
+        }
+
+        return parsedRow;
+    });
+}
 function populateStartingPoints() {
     const dropdown = document.getElementById('startingPoint');
     dropdown.innerHTML = '';
@@ -66,7 +71,6 @@ function updateLeverageValue() {
     document.getElementById('leverageValue').textContent = leverageFactor;
     console.log('Updated Leverage Factor:', leverageFactor);
 }
-
 function startSimulation() {
     if (rawData.length === 0) {
         alert('Please upload a CSV file or ensure default data is loaded.');
@@ -91,18 +95,34 @@ function startSimulation() {
             const close = rawData[j].close;
             const date = rawData[j].date;
 
-            if (isNaN(open) || isNaN(close) || open === 0 || !isValidDate(date)) {
+            if (isNaN(open) || isNaN(close) || open <= 0 || close <= 0 || !isValidDate(date)) {
+                console.warn(`Invalid data at index ${j}: date=${date}, open=${open}, close=${close}`);
                 continue;
             }
 
-            const dailyChange = (close - open) / open;
-            valueLeverage += valueLeverage * dailyChange * leverageFactor;
-            valueNoLeverage += valueNoLeverage * dailyChange;
+            const dailyReturn = (close - open) / open;
+
+            if (isNaN(dailyReturn) || !isFinite(dailyReturn)) {
+                console.warn(`Invalid daily return at index ${j}: ${dailyReturn}`);
+                continue;
+            }
+
+            valueLeverage *= (1 + dailyReturn * leverageFactor);
+            valueNoLeverage *= (1 + dailyReturn);
+
+            if (isNaN(valueLeverage) || !isFinite(valueLeverage) ||
+                isNaN(valueNoLeverage) || !isFinite(valueNoLeverage)) {
+                console.error(`Invalid value calculated at index ${j}: valueLeverage=${valueLeverage}, valueNoLeverage=${valueNoLeverage}`);
+                valueLeverage = valueNoLeverage = 1; // Reset to avoid propagating errors
+            }
         }
 
         simulations.push({ date: rawData[i].date, value: valueLeverage });
         simulationsNoLeverage.push({ date: rawData[i].date, value: valueNoLeverage });
     }
+
+    console.log('Simulations:', simulations);
+    console.log('Simulations No Leverage:', simulationsNoLeverage);
 
     plotGraph(simulations, simulationsNoLeverage);
 }
