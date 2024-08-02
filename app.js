@@ -1,6 +1,27 @@
-document.getElementById('csvFile').addEventListener('change', handleFileSelect, false);
+document.addEventListener('DOMContentLoaded', function() {
+    // Load default CSV data
+    loadDefaultCSV();
+
+    document.getElementById('csvFile').addEventListener('change', handleFileSelect, false);
+    document.getElementById('leverageFactor').addEventListener('input', updateLeverageValue, false);
+});
 
 let rawData = [];
+let leverageFactor = 3;
+
+function loadDefaultCSV() {
+    // Default CSV file URL
+    const defaultCSVUrl = 'HistoricalData_1722553187753.csv';
+
+    fetch(defaultCSVUrl)
+        .then(response => response.text())
+        .then(text => {
+            rawData = parseCSV(text);
+            console.log('Loaded Default Data:', rawData); // Debugging line
+            populateStartingPoints(); // Populate dropdown with dates from CSV
+        })
+        .catch(error => console.error('Error loading default CSV:', error));
+}
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
@@ -10,6 +31,7 @@ function handleFileSelect(event) {
             const text = e.target.result;
             rawData = parseCSV(text);
             console.log('Parsed Data:', rawData); // Debugging line
+            populateStartingPoints(); // Populate dropdown with dates from CSV
         };
         reader.readAsText(file);
     }
@@ -29,38 +51,59 @@ function parseCSV(text) {
     });
 }
 
+function populateStartingPoints() {
+    const dropdown = document.getElementById('startingPoint');
+    dropdown.innerHTML = ''; // Clear existing options
+    rawData.forEach((data, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = data.date;
+        dropdown.appendChild(option);
+    });
+}
+
+function updateLeverageValue() {
+    leverageFactor = parseFloat(document.getElementById('leverageFactor').value);
+    document.getElementById('leverageValue').textContent = leverageFactor;
+}
+
 function startSimulation() {
     if (rawData.length === 0) {
-        alert('Please upload a CSV file first.');
+        alert('Please upload a CSV file or ensure default data is loaded.');
+        return;
+    }
+
+    const selectedIndex = parseInt(document.getElementById('startingPoint').value, 10);
+    if (isNaN(selectedIndex) || selectedIndex >= rawData.length) {
+        alert('Please select a valid starting point.');
         return;
     }
 
     const simulations = [];
-    const leverageFactor = 3;
-for (let i = 0; i < rawData.length - 10; i++) {
-    let value = 1; // Starting with an arbitrary investment of $1
-    for (let j = i; j < rawData.length; j++) {
-        const open = rawData[j].open;
-        const close = rawData[j].close;
-        const date = rawData[j].date;
+    for (let i = selectedIndex; i < rawData.length - 10; i++) {
+        let value = 1; // Starting with an arbitrary investment of $1
+        for (let j = i; j < rawData.length; j++) {
+            const open = rawData[j].open;
+            const close = rawData[j].close;
+            const date = rawData[j].date;
 
-        // Validate data
-        if (isNaN(open) || isNaN(close) || open === 0 || !isValidDate(date)) {
-            continue;
+            // Validate data
+            if (isNaN(open) || isNaN(close) || open === 0 || !isValidDate(date)) {
+                continue;
+            }
+
+            const dailyChange = (close - open) / open;
+            value += value * dailyChange * leverageFactor;
         }
-
-        const dailyChange = (close - open) / open;
-        value += value * dailyChange * leverageFactor;
+        simulations.push({ startDate: rawData[i].date, finalValue: value });
+        console.log('Simulation:', { startDate: rawData[i].date, finalValue: value }); // Debug
     }
-    simulations.push({ startDate: rawData[i].date, finalValue: value });
-    console.log('Simulation:', { startDate: rawData[i].date, finalValue: value }); // Debug
+
+    console.log('Simulations:', simulations); // Debugging line
+    plotGraph(simulations);
 }
 
-console.log('Simulations:', simulations); // Debugging line
-plotGraph(simulations);
-
 function isValidDate(dateString) {
-    // Check if the date string is in a valid format (e.g., YYYY-MM-DD)
     const date = new Date(dateString);
     return !isNaN(date.getTime());
 }
@@ -112,5 +155,4 @@ function plotGraph(simulations) {
         },
         plugins: [ChartDataLabels]
     });
-}
 }
