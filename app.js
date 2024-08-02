@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     loadDefaultCSV();
 
-    document.getElementById('csvFile').addEventListener('change', handleFileSelect, false);
-    document.getElementById('leverageFactor').addEventListener('input', updateLeverageValue, false);
     document.getElementById('startSimulation').addEventListener('click', startSimulation, false);
+    // listen to changes in the leverage factor input field
+    document.getElementById('leverageFactor').addEventListener('change', updateLeverageValue, false);
 });
 
 let rawData = [];
@@ -64,6 +64,7 @@ function populateStartingPoints() {
 function updateLeverageValue() {
     leverageFactor = parseFloat(document.getElementById('leverageFactor').value);
     document.getElementById('leverageValue').textContent = leverageFactor;
+    console.log('Updated Leverage Factor:', leverageFactor);
 }
 
 function startSimulation() {
