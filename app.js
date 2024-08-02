@@ -1,24 +1,23 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Load default CSV data
     loadDefaultCSV();
 
     document.getElementById('csvFile').addEventListener('change', handleFileSelect, false);
     document.getElementById('leverageFactor').addEventListener('input', updateLeverageValue, false);
+    document.getElementById('startSimulation').addEventListener('click', startSimulation, false);
 });
 
 let rawData = [];
 let leverageFactor = 3;
 
 function loadDefaultCSV() {
-    // Default CSV file URL
     const defaultCSVUrl = 'HistoricalData_1722553187753.csv';
 
     fetch(defaultCSVUrl)
         .then(response => response.text())
         .then(text => {
             rawData = parseCSV(text);
-            console.log('Loaded Default Data:', rawData); // Debugging line
-            populateStartingPoints(); // Populate dropdown with dates from CSV
+            console.log('Loaded Default Data:', rawData);
+            populateStartingPoints();
         })
         .catch(error => console.error('Error loading default CSV:', error));
 }
@@ -30,8 +29,8 @@ function handleFileSelect(event) {
         reader.onload = function(e) {
             const text = e.target.result;
             rawData = parseCSV(text);
-            console.log('Parsed Data:', rawData); // Debugging line
-            populateStartingPoints(); // Populate dropdown with dates from CSV
+            console.log('Parsed Data:', rawData);
+            populateStartingPoints();
         };
         reader.readAsText(file);
     }
@@ -48,12 +47,12 @@ function parseCSV(text) {
             high: parseFloat(cols[3]),
             low: parseFloat(cols[4])
         };
-    });
+    }).reverse(); // Reverse the array to have oldest data first
 }
 
 function populateStartingPoints() {
     const dropdown = document.getElementById('startingPoint');
-    dropdown.innerHTML = ''; // Clear existing options
+    dropdown.innerHTML = '';
     rawData.forEach((data, index) => {
         const option = document.createElement('option');
         option.value = index;
@@ -80,45 +79,30 @@ function startSimulation() {
     }
 
     const simulations = [];
-    for (let i = selectedIndex; i < rawData.length - 10; i++) {
-        let value = 1; // Starting with an arbitrary investment of $1
-        for (let j = i; j < rawData.length; j++) {
-            const open = rawData[j].open;
-            const close = rawData[j].close;
-            const date = rawData[j].date;
-
-            // Validate data
-            if (isNaN(open) || isNaN(close) || open === 0 || !isValidDate(date)) {
-                continue;
-            }
-
-            const dailyChange = (close - open) / open;
-            value += value * dailyChange * leverageFactor;
-        }
-        simulations.push({ startDate: rawData[i].date, finalValue: value });
-        console.log('Simulation:', { startDate: rawData[i].date, finalValue: value }); // Debug
-    }
-
-    console.log('Simulations:', simulations); // Debugging line
     const simulationsNoLeverage = [];
-    for (let i = selectedIndex; i < rawData.length - 10; i++) {
-        let value = 1; // Starting with an arbitrary investment of $1
-        for (let j = i; j < rawData.length; j++) {
+
+    for (let i = selectedIndex; i < rawData.length; i++) {
+        let valueLeverage = 1;
+        let valueNoLeverage = 1;
+
+        for (let j = selectedIndex; j <= i; j++) {
             const open = rawData[j].open;
             const close = rawData[j].close;
             const date = rawData[j].date;
 
-            // Validate data
             if (isNaN(open) || isNaN(close) || open === 0 || !isValidDate(date)) {
                 continue;
             }
 
             const dailyChange = (close - open) / open;
-            value += value * dailyChange;
+            valueLeverage += valueLeverage * dailyChange * leverageFactor;
+            valueNoLeverage += valueNoLeverage * dailyChange;
         }
-        simulationsNoLeverage.push({ startDate: rawData[i].date, finalValue: value });
-        console.log('Simulation:', { startDate: rawData[i].date, finalValue: value }); // Debug
+
+        simulations.push({ date: rawData[i].date, value: valueLeverage });
+        simulationsNoLeverage.push({ date: rawData[i].date, value: valueNoLeverage });
     }
+
     plotGraph(simulations, simulationsNoLeverage);
 }
 
@@ -126,19 +110,22 @@ function isValidDate(dateString) {
     const date = new Date(dateString);
     return !isNaN(date.getTime());
 }
+
 function plotGraph(simulationsLeverage, simulationsNoLeverage) {
     const ctx = document.getElementById('myChart').getContext('2d');
 
-
+    if (window.myChart instanceof Chart) {
+        window.myChart.destroy();
+    }
 
     window.myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: simulationsLeverage.map(sim => sim.startDate),
+            labels: simulationsLeverage.map(sim => sim.date),
             datasets: [
                 {
                     label: 'Leverage Simulation',
-                    data: simulationsLeverage.map(sim => sim.finalValue),
+                    data: simulationsLeverage.map(sim => sim.value),
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 2,
                     fill: false,
@@ -146,7 +133,7 @@ function plotGraph(simulationsLeverage, simulationsNoLeverage) {
                 },
                 {
                     label: 'No Leverage Simulation',
-                    data: simulationsNoLeverage.map(sim => sim.finalValue),
+                    data: simulationsNoLeverage.map(sim => sim.value),
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 2,
                     fill: false,
@@ -157,11 +144,11 @@ function plotGraph(simulationsLeverage, simulationsNoLeverage) {
         options: {
             plugins: {
                 datalabels: {
-                    display: false, // Hide data labels by default
+                    display: false,
                     align: 'top',
                     color: 'black',
                     formatter: function(value) {
-                        return value.toFixed(2); // Format the value to 2 decimal places
+                        return value.toFixed(2);
                     }
                 },
                 tooltip: {
@@ -177,14 +164,14 @@ function plotGraph(simulationsLeverage, simulationsNoLeverage) {
                     display: true,
                     title: {
                         display: true,
-                        text: 'Start Date'
+                        text: 'Date'
                     }
                 },
                 y: {
                     display: true,
                     title: {
                         display: true,
-                        text: 'Final Value ($)'
+                        text: 'Value ($)'
                     }
                 }
             }
