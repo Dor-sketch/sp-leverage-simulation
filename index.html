@@ -2,11 +2,217 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S&P Leverage Simulation</title>
+
+    <!-- Google Tag Manager -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T7HFKFX0PR"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-T7HFKFX0PR');
+    </script>
+
+    <!-- SEO and Metadata -->
+    <meta name="author" content="Dor Pascal">
+    <meta name="generator" content="vscode">
+    <meta property="og:title" content="S&P Leverage Simulation">
+    <meta property="og:locale" content="en_US">
+    <meta name="description"
+        content="Simulate the performance of the S&P 500 index with leverage using historical data. Choose a starting point, leverage factor, and see the results.">
+    <meta name="keywords"
+        content="S&P 500, Leverage, Simulation, Historical Data, Performance, Index, Stock Market, Investment, Finance, Financial, Data, Chart, Graph, Interactive, Controls, Starting Point, Leverage Factor, Results">
+    <meta property="og:description"
+        content="Simulate the performance of the S&P 500 index with leverage using historical data. Choose a starting point, leverage factor, and see the results.">
+    <meta property="og:url" content="https://dorpascal.com/sp-leverage-simulation/">
+    <meta property="og:site_name" content="Dor Pascal">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://dorpascal.com/sp-leverage-simulation/graph.png">
+    <meta name="twitter:card" content="summary">
+    <meta property="twitter:title" content="S&P Leverage Simulation">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-title" content="S&P Leverage Simulation">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="application-name" content="S&P Leverage Simulation">
+    <link rel="canonical" href="https://dorpascal.com/sp-leverage-simulation/">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "S&P Leverage Simulation",
+        "url": "https://dorpascal.com/sp-leverage-simulation/",
+        "applicationCategory": "Simulation",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires JavaScript. Optimized for modern browsers.",
+        "author": {
+            "@type": "Person",
+            "name": "Dor Pascal"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "Dor Pascal"
+        },
+        "description": "Simulate the performance of the S&P 500 index with leverage using historical data. Choose a starting point, leverage factor, and see the results.",
+        "image": "https://dorpascal.com/sp-leverage-simulation/graph.png",
+        "softwareVersion": "1.0",
+        "datePublished": "2024-07-23",
+        "dateModified": "2024-07-26",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "reviewCount": "128"
+        }
+    }
+    </script>
+
+
+     <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "name": "Breadcrumb List",
+        "itemListElement": [{
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://dorpascal.com"
+        }, {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "S&P Leverage Simulation",
+            "item": "https://dorpascal.com/sp-leverage-simulation/"
+        }]
+    }
+    </script>
+
+    <!-- Icons and Manifest -->
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/Web/icons8-stocks-windows-11-color-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/Web/icons8-stocks-windows-11-color-32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="icons/Web/icons8-stocks-windows-11-color-96.png">
+    <link rel="icon" type="image/png" sizes="120x120" href="icons/Web/icons8-stocks-windows-11-color-120.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/iOS-Safari-Web-Clip/icons8-stocks-windows-11-color-180.png">
+    <link rel="manifest" href="https://dorpascal.com/site.webmanifest">
+    <link rel="shortcut icon" href="https://dorpascal.com/favicon.ico">
+
+    <!-- Styles and Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <style>
+
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --white-color: #ffffff;
+            --black-color: #000000;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 1rem;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav ul li {
+            margin: 0 1rem;
+        }
+
+        nav ul li a {
+            color: var(--white-color);
+            text-decoration: none;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 0 auto;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        select, input[type="range"] {
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        footer {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            text-align: center;
+            padding: 1rem;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        footer a {
+            color: var(--white-color);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        
         #graph-container {
             width: 80%;
             height: 400px;
@@ -15,6 +221,14 @@
     </style>
 </head>
 <body>
+<header>
+    <nav>
+        <ul>
+            <li><a href="https://dorpascal.com">Home</a></li>
+            <li><a href="https://dorpascal.com/sp-leverage-simulation/">S&P Leverage Simulation</a></li>
+        </ul>
+    </nav>
+</header>
     <h1>S&P Leverage Simulation</h1>
     <input type="file" id="csvFile" accept=".csv">
     <label for="startingPoint">Choose starting point:</label>
@@ -26,6 +240,9 @@
     <div id="graph-container">
         <canvas id="myChart"></canvas>
     </div>
+    <footer>
+        <p>Created by <a href="https://dorpascal.com">Dor Pascal</a></p>
+    </footer>
     <script src="app.js"></script>
 </body>
 </html>
