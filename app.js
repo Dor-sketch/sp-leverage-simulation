@@ -87,8 +87,8 @@ function startSimulation() {
     const simulationsNoLeverage = [];
 
     for (let i = selectedIndex; i < rawData.length; i++) {
-        let valueLeverage = 1;
-        let valueNoLeverage = 1;
+        let valueLeverage = rawData[selectedIndex].open;
+        let valueNoLeverage = rawData[selectedIndex].open;
 
         for (let j = selectedIndex; j <= i; j++) {
             const open = rawData[j].open;
