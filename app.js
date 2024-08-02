@@ -100,39 +100,75 @@ function startSimulation() {
     }
 
     console.log('Simulations:', simulations); // Debugging line
-    plotGraph(simulations);
+    const simulationsNoLeverage = [];
+    for (let i = selectedIndex; i < rawData.length - 10; i++) {
+        let value = 1; // Starting with an arbitrary investment of $1
+        for (let j = i; j < rawData.length; j++) {
+            const open = rawData[j].open;
+            const close = rawData[j].close;
+            const date = rawData[j].date;
+
+            // Validate data
+            if (isNaN(open) || isNaN(close) || open === 0 || !isValidDate(date)) {
+                continue;
+            }
+
+            const dailyChange = (close - open) / open;
+            value += value * dailyChange;
+        }
+        simulationsNoLeverage.push({ startDate: rawData[i].date, finalValue: value });
+        console.log('Simulation:', { startDate: rawData[i].date, finalValue: value }); // Debug
+    }
+    plotGraph(simulations, simulationsNoLeverage);
 }
 
 function isValidDate(dateString) {
     const date = new Date(dateString);
     return !isNaN(date.getTime());
 }
-
-function plotGraph(simulations) {
+function plotGraph(simulationsLeverage, simulationsNoLeverage) {
     const ctx = document.getElementById('myChart').getContext('2d');
-    const labels = simulations.map(sim => sim.startDate);
-    const data = simulations.map(sim => sim.finalValue);
 
-    new Chart(ctx, {
+
+
+    window.myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
-            datasets: [{
-                label: 'Leverage Simulation',
-                data: data,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2,
-                fill: false
-            }]
+            labels: simulationsLeverage.map(sim => sim.startDate),
+            datasets: [
+                {
+                    label: 'Leverage Simulation',
+                    data: simulationsLeverage.map(sim => sim.finalValue),
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0
+                },
+                {
+                    label: 'No Leverage Simulation',
+                    data: simulationsNoLeverage.map(sim => sim.finalValue),
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0
+                }
+            ]
         },
         options: {
             plugins: {
                 datalabels: {
-                    display: true,
+                    display: false, // Hide data labels by default
                     align: 'top',
                     color: 'black',
                     formatter: function(value) {
                         return value.toFixed(2); // Format the value to 2 decimal places
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.raw.toFixed(2);
+                        }
                     }
                 }
             },
