@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S&P Leverage Simulation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <style>
+        #graph-container {
+            width: 80%;
+            height: 400px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>S&P Leverage Simulation</h1>
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="startSimulation()">Start Simulation</button>
+    <div id="graph-container">
+        <canvas id="myChart"></canvas>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
